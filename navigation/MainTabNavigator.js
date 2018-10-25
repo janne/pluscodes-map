@@ -8,21 +8,18 @@ import {
 import TabBarIcon from "../components/TabBarIcon"
 import HomeScreen from "../screens/HomeScreen"
 import LinksScreen from "../screens/LinksScreen"
-import SettingsScreen from "../screens/SettingsScreen"
 
 const HomeStack = createStackNavigator({
   Home: HomeScreen
 })
 
 HomeStack.navigationOptions = {
-  tabBarLabel: "Home",
+  tabBarLabel: "Map",
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
       name={
-        Platform.OS === "ios"
-          ? `ios-information-circle${focused ? "" : "-outline"}`
-          : "md-information-circle"
+        Platform.OS === "ios" ? `ios-map${focused ? "" : "-outline"}` : "md-map"
       }
     />
   )
@@ -33,32 +30,14 @@ const LinksStack = createStackNavigator({
 })
 
 LinksStack.navigationOptions = {
-  tabBarLabel: "Links",
+  tabBarLabel: "Codes",
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
       name={
         Platform.OS === "ios"
-          ? `ios-link${focused ? "" : "-outline"}`
-          : "md-link"
-      }
-    />
-  )
-}
-
-const SettingsStack = createStackNavigator({
-  Settings: SettingsScreen
-})
-
-SettingsStack.navigationOptions = {
-  tabBarLabel: "Settings",
-  tabBarIcon: ({ focused }) => (
-    <TabBarIcon
-      focused={focused}
-      name={
-        Platform.OS === "ios"
-          ? `ios-options${focused ? "" : "-outline"}`
-          : "md-options"
+          ? `ios-reorder${focused ? "" : "-outline"}`
+          : "md-reorder"
       }
     />
   )
@@ -66,6 +45,5 @@ SettingsStack.navigationOptions = {
 
 export default createBottomTabNavigator({
   HomeStack,
-  LinksStack,
-  SettingsStack
+  LinksStack
 })
