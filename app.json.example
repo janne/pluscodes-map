@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "plushcodes",
+    "name": "pluscodes-map",
     "description": "A very interesting project.",
-    "slug": "plushcodes",
+    "slug": "pluscodes-map",
     "privacy": "public",
     "sdkVersion": "30.0.0",
     "platforms": ["android"],
