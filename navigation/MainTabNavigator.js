@@ -7,7 +7,7 @@ import {
 
 import TabBarIcon from "../components/TabBarIcon"
 import HomeScreen from "../screens/HomeScreen"
-import LinksScreen from "../screens/LinksScreen"
+import CodesScreen from "../screens/CodesScreen"
 
 const HomeStack = createStackNavigator({
   Home: HomeScreen
@@ -25,11 +25,11 @@ HomeStack.navigationOptions = {
   )
 }
 
-const LinksStack = createStackNavigator({
-  Links: LinksScreen
+const CodesStack = createStackNavigator({
+  Codes: CodesScreen
 })
 
-LinksStack.navigationOptions = {
+CodesStack.navigationOptions = {
   tabBarLabel: "Codes",
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
@@ -45,5 +45,5 @@ LinksStack.navigationOptions = {
 
 export default createBottomTabNavigator({
   HomeStack,
-  LinksStack
+  CodesStack
 })
