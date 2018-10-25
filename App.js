@@ -12,36 +12,23 @@ export default class App extends React.Component {
     if (!this.state.isLoadingComplete && !this.props.skipLoadingScreen) {
       return (
         <AppLoading
-          startAsync={this._loadResourcesAsync}
-          onError={this._handleLoadingError}
-          onFinish={this._handleFinishLoading}
+          startAsync={this.loadResourcesAsync}
+          onError={console.warn}
+          onFinish={this.handleFinishLoading}
         />
       )
-    } else {
-      return (
-        <View style={styles.container}>
-          {Platform.OS === "ios" && <StatusBar barStyle="default" />}
-          <AppNavigator />
-        </View>
-      )
     }
+
+    return (
+      <View style={styles.container}>
+        <AppNavigator />
+      </View>
+    )
   }
 
-  _loadResourcesAsync = async () => {
-    return Promise.all([
-      Font.loadAsync({
-        ...Icon.Ionicons.font
-      })
-    ])
-  }
+  loadResourcesAsync = async () => Font.loadAsync(Icon.Ionicons.font)
 
-  _handleLoadingError = error => {
-    // In this case, you might want to report the error to your error
-    // reporting service, for example Sentry
-    console.warn(error)
-  }
-
-  _handleFinishLoading = () => {
+  handleFinishLoading = () => {
     this.setState({ isLoadingComplete: true })
   }
 }
