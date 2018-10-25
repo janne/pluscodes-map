@@ -13,11 +13,13 @@ export default class HomeScreen extends React.Component {
         <MapView
           style={styles.map}
           initialRegion={{
-            latitude: 43.78825,
-            longitude: 18.4324,
+            latitude: 59.332438,
+            longitude: 18.118813,
             latitudeDelta: 0.0922,
             longitudeDelta: 0.0421
           }}
+          showsUserLocation={true}
+          rotateEnabled={false}
         />
         <View style={styles.bubble}>
           <TextInput
