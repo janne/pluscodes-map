@@ -30,14 +30,14 @@ const CodesStack = createStackNavigator({
 })
 
 CodesStack.navigationOptions = {
-  tabBarLabel: "Codes",
+  tabBarLabel: "Plus codes",
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
       name={
         Platform.OS === "ios"
-          ? `ios-reorder${focused ? "" : "-outline"}`
-          : "md-reorder"
+          ? `ios-bookmarks${focused ? "" : "-outline"}`
+          : "md-bookmarks"
       }
     />
   )
