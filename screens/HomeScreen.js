@@ -1,7 +1,14 @@
 import React from "react"
-import { StyleSheet, StatusBar, View, TextInput } from "react-native"
+import {
+  StyleSheet,
+  StatusBar,
+  View,
+  TextInput,
+  TouchableOpacity
+} from "react-native"
 import { MapView } from "expo"
 import { decode } from "pluscodes"
+import Dialog from "react-native-dialog"
 import * as R from "ramda"
 import TabBarIcon from "../components/TabBarIcon"
 
@@ -16,16 +23,22 @@ export default class HomeScreen extends React.Component {
     resolution: undefined,
     delta: 0.0922,
     error: false,
-    code: undefined
+    code: undefined,
+    dialogVisible: false
   }
+
+  hasCode = () => Boolean(this.state.code)
 
   decode = e => {
     const code = e.nativeEvent.text.toUpperCase()
     const coord = decode(code)
-    this.setState({ error: !coord })
+    this.setState({ error: !coord, code: undefined })
     if (!coord) return
     this.setState({ ...coord, code, delta: coord.resolution * 10 })
   }
+
+  toggleModal = () =>
+    this.setState({ dialogVisible: !this.state.dialogVisible })
 
   polygonCoords = () => {
     if (!this.state.resolution) return []
@@ -54,11 +67,12 @@ export default class HomeScreen extends React.Component {
           showsUserLocation={true}
           rotateEnabled={false}
         >
-          <MapView.Marker
-            title={this.state.code}
-            coordinate={R.pick(["latitude", "longitude"], this.state)}
-            opacity={this.state.code ? 1.0 : 0}
-          />
+          {this.hasCode() && (
+            <MapView.Marker
+              title={this.state.code}
+              coordinate={R.pick(["latitude", "longitude"], this.state)}
+            />
+          )}
           {this.state.resolution && (
             <MapView.Polygon
               coordinates={this.polygonCoords()}
@@ -72,13 +86,32 @@ export default class HomeScreen extends React.Component {
             ref={"input"}
             style={styles.input}
             underlineColorAndroid={this.state.error ? "red" : "transparent"}
-            placeholder="Enter a plus code"
+            placeholder="Plus code and/or location"
             defaultValue={this.state.code}
             onEndEditing={this.decode}
           />
 
-          <View style={styles.icon}>
-            <TabBarIcon style name="md-star" />
+          <TouchableOpacity
+            style={styles.icon}
+            activeOpacity={this.hasCode() ? 0.2 : 1}
+            onPress={this.hasCode() ? this.toggleModal : undefined}
+          >
+            <TabBarIcon style name="md-bookmark" focused={this.hasCode()} />
+          </TouchableOpacity>
+
+          <View>
+            <Dialog.Container visible={this.state.dialogVisible}>
+              <Dialog.Title>Save plus code</Dialog.Title>
+              <Dialog.Description>
+                Choose a name for this plus code
+              </Dialog.Description>
+              <Dialog.Input label="Name" autoFocus={true} />
+              <Dialog.Button label="Cancel" onPress={this.toggleModal} />
+              <Dialog.Button
+                label="Save"
+                onPress={() => console.log("Saved")}
+              />
+            </Dialog.Container>
           </View>
         </View>
       </View>

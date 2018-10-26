@@ -18,6 +18,7 @@
     "ramda": "^0.25.0",
     "react": "16.3.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-30.0.0.tar.gz",
+    "react-native-dialog": "^5.4.0",
     "react-navigation": "^2.16.0"
   },
   "devDependencies": {
