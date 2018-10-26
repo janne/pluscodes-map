@@ -6,7 +6,7 @@ import {
   TextInput,
   TouchableOpacity
 } from "react-native"
-import { MapView } from "expo"
+import { MapView, Permissions, Location } from "expo"
 import { decode, encode } from "pluscodes"
 import Dialog from "react-native-dialog"
 import * as R from "ramda"
@@ -18,40 +18,85 @@ export default class HomeScreen extends React.Component {
   }
 
   state = {
-    latitude: 59.332438,
-    longitude: 18.118813,
-    resolution: undefined,
-    delta: 0.0922,
-    error: false,
+    region: {
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
+      latitude: 59.332438,
+      longitude: 18.118813
+    },
+    marker: undefined,
     code: undefined,
+    locationServices: false,
+    error: false,
     dialogVisible: false,
     name: ""
   }
 
-  hasCode = () => Boolean(this.state.code)
+  hasMarker = () => Boolean(this.state.marker)
 
-  decode = ({ nativeEvent }) => {
+  handleInput = async ({ nativeEvent }) => {
     const code = nativeEvent.text.toUpperCase()
     const coord = decode(code)
     this.setState({ error: !coord, code: undefined, name: undefined })
     if (!coord) return
-    this.setState({ ...coord, code, delta: coord.resolution * 10 })
+    const delta = coord.resolution * 10
+    this.setState({
+      region: { ...coord, latitudeDelta: delta, longitudeDelta: delta },
+      marker: coord,
+      name: code,
+      code
+    })
+    this.simplifyCode(code)
   }
 
-  handleMapPress = ({ nativeEvent }) => {
+  handleRegionChange = region => {
+    this.setState({ region })
+  }
+
+  simplifyCode = async (code = this.state.code) => {
+    try {
+      if (!this.state.marker) return
+      const addresses = await Expo.Location.reverseGeocodeAsync(
+        this.state.marker
+      )
+      const { region, city } = addresses[0]
+      const address = city || region
+      const positions = await Expo.Location.geocodeAsync(address)
+      const { latitude, longitude } = positions[0]
+      const ref = encode({ latitude, longitude }, 4)
+      if (ref.slice(0, 4) === code.slice(0, 4)) {
+        this.setState({ code: `${code.slice(4)} ${address}` })
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  handleMapPress = async ({ nativeEvent }) => {
     const code = encode(nativeEvent.coordinate)
-    if (Boolean(code))
-      this.setState({ ...nativeEvent.coordinate, code, name: nativeEvent.name })
+    if (Boolean(code)) {
+      this.setState({
+        marker: { ...nativeEvent.coordinate, resolution: 0.000125 },
+        region: {
+          ...nativeEvent.coordinate,
+          latitudeDelta: this.state.region.latitudeDelta,
+          longitudeDelta: this.state.region.longitudeDelta
+        },
+        code,
+        name: nativeEvent.name
+      })
+      this.simplifyCode()
+    }
   }
 
   toggleModal = () =>
     this.setState({ dialogVisible: !this.state.dialogVisible })
 
   polygonCoords = () => {
-    if (!this.state.resolution) return []
-    const lat = this.state.latitude
-    const lng = this.state.longitude
-    const h = this.state.resolution / 2
+    if (!this.state.marker) return []
+    const lat = this.state.marker.latitude
+    const lng = this.state.marker.longitude
+    const h = this.state.marker.resolution / 2
     return [
       { latitude: lat - h, longitude: lng - h },
       { latitude: lat + h, longitude: lng - h },
@@ -60,29 +105,42 @@ export default class HomeScreen extends React.Component {
     ]
   }
 
+  getLocationAsync = async () => {
+    let { status } = await Permissions.askAsync(Permissions.LOCATION)
+    if (status !== "granted") return
+
+    let location = Location.getCurrentPositionAsync({}).then(location => {
+      const { longitude, latitude } = location.coords
+      this.setState({
+        region: { ...this.state.region, longitude, latitude },
+        locationServices: true
+      })
+    })
+  }
+
+  componentWillMount() {
+    this.getLocationAsync()
+  }
+
   render() {
     return (
       <View style={styles.container}>
         <MapView
           style={styles.map}
-          initialRegion={{
-            latitude: this.state.latitude,
-            longitude: this.state.longitude,
-            latitudeDelta: this.state.delta,
-            longitudeDelta: this.state.delta
-          }}
+          region={this.state.region}
           showsUserLocation={true}
           rotateEnabled={false}
           onPress={this.handleMapPress}
           onPoiClick={this.handleMapPress}
+          onRegionChangeComplete={this.handleRegionChange}
         >
-          {this.hasCode() && (
+          {this.hasMarker() && (
             <MapView.Marker
               title={this.state.name || this.state.code}
-              coordinate={R.pick(["latitude", "longitude"], this.state)}
+              coordinate={R.pick(["latitude", "longitude"], this.state.marker)}
             />
           )}
-          {this.state.resolution && (
+          {this.state.marker && (
             <MapView.Polygon
               coordinates={this.polygonCoords()}
               fillColor={"rgba(255, 128, 128, 0.5)"}
@@ -96,15 +154,15 @@ export default class HomeScreen extends React.Component {
             underlineColorAndroid={this.state.error ? "red" : "transparent"}
             placeholder="Plus code and/or location"
             defaultValue={this.state.code}
-            onEndEditing={this.decode}
+            onEndEditing={this.handleInput}
           />
 
           <TouchableOpacity
             style={styles.icon}
-            activeOpacity={this.hasCode() ? 0.2 : 1}
-            onPress={this.hasCode() ? this.toggleModal : undefined}
+            activeOpacity={this.hasMarker() ? 0.2 : 1}
+            onPress={this.hasMarker() ? this.toggleModal : undefined}
           >
-            <TabBarIcon style name="md-bookmark" focused={this.hasCode()} />
+            <TabBarIcon style name="md-bookmark" focused={this.hasMarker()} />
           </TouchableOpacity>
 
           <View>
