@@ -92,7 +92,6 @@ export default class HomeScreen extends React.Component {
         </MapView>
         <View style={styles.bubble}>
           <TextInput
-            ref={"input"}
             style={styles.input}
             underlineColorAndroid={this.state.error ? "red" : "transparent"}
             placeholder="Plus code and/or location"
@@ -118,11 +117,17 @@ export default class HomeScreen extends React.Component {
                 label="Name"
                 autoFocus={true}
                 value={this.state.name}
+                onChange={({ nativeEvent }) =>
+                  this.setState({ name: nativeEvent.text })
+                }
               />
               <Dialog.Button label="Cancel" onPress={this.toggleModal} />
               <Dialog.Button
                 label="Save"
-                onPress={() => console.log("Saved")}
+                onPress={() => {
+                  console.log("Saved", this.state.name)
+                  this.toggleModal()
+                }}
               />
             </Dialog.Container>
           </View>
