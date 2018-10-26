@@ -7,7 +7,7 @@ import {
   TouchableOpacity
 } from "react-native"
 import { MapView } from "expo"
-import { decode } from "pluscodes"
+import { decode, encode } from "pluscodes"
 import Dialog from "react-native-dialog"
 import * as R from "ramda"
 import TabBarIcon from "../components/TabBarIcon"
@@ -24,17 +24,24 @@ export default class HomeScreen extends React.Component {
     delta: 0.0922,
     error: false,
     code: undefined,
-    dialogVisible: false
+    dialogVisible: false,
+    name: ""
   }
 
   hasCode = () => Boolean(this.state.code)
 
-  decode = e => {
-    const code = e.nativeEvent.text.toUpperCase()
+  decode = ({ nativeEvent }) => {
+    const code = nativeEvent.text.toUpperCase()
     const coord = decode(code)
-    this.setState({ error: !coord, code: undefined })
+    this.setState({ error: !coord, code: undefined, name: undefined })
     if (!coord) return
     this.setState({ ...coord, code, delta: coord.resolution * 10 })
+  }
+
+  handleMapPress = ({ nativeEvent }) => {
+    const code = encode(nativeEvent.coordinate)
+    if (Boolean(code))
+      this.setState({ ...nativeEvent.coordinate, code, name: nativeEvent.name })
   }
 
   toggleModal = () =>
@@ -58,7 +65,7 @@ export default class HomeScreen extends React.Component {
       <View style={styles.container}>
         <MapView
           style={styles.map}
-          region={{
+          initialRegion={{
             latitude: this.state.latitude,
             longitude: this.state.longitude,
             latitudeDelta: this.state.delta,
@@ -66,10 +73,12 @@ export default class HomeScreen extends React.Component {
           }}
           showsUserLocation={true}
           rotateEnabled={false}
+          onPress={this.handleMapPress}
+          onPoiClick={this.handleMapPress}
         >
           {this.hasCode() && (
             <MapView.Marker
-              title={this.state.code}
+              title={this.state.name || this.state.code}
               coordinate={R.pick(["latitude", "longitude"], this.state)}
             />
           )}
@@ -105,7 +114,11 @@ export default class HomeScreen extends React.Component {
               <Dialog.Description>
                 Choose a name for this plus code
               </Dialog.Description>
-              <Dialog.Input label="Name" autoFocus={true} />
+              <Dialog.Input
+                label="Name"
+                autoFocus={true}
+                value={this.state.name}
+              />
               <Dialog.Button label="Cancel" onPress={this.toggleModal} />
               <Dialog.Button
                 label="Save"
